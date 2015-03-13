@@ -30,12 +30,6 @@
   tags:
       - install
       
-# - name: install python mysqldb module, required for ansible to manage mysql
-#   pip: name=bottle
-#   tags:
-#       - install
-#       - debug
-
 - name: create redmine_system_user user
   user: name={{ redmine_system_user }}
         comment="redmine_system_user"
@@ -125,7 +119,6 @@
 #   register: redmine_db_status
 #   changed_when: "'Unknown database' in redmine_db_status.stderr"
 #   failed_when: "'Can\\'t connect to local MySQL server' in redmine_db_status.stderr"
-#   tags: debug
 
 - name: create redmine DB
   mysql_db: name=redmine
@@ -149,6 +142,14 @@
 - name: copy DB configuration
   template: src=database.yml dest="{{ redmine_path }}/current/config/database.yml"
   sudo_user: "{{ redmine_system_user }}"
+  notify: reload apache
+  tags: config
+
+- name: copy redmine configuration
+  template: src=configuration.yml dest="{{ redmine_path }}/current/config/configuration.yml"
+  sudo_user: "{{ redmine_system_user }}"
+  notify: reload apache
+  tags: config
 #"
 
 - name: install and run bundler
@@ -172,7 +173,6 @@
   sudo_user: "{{ redmine_system_user }}"
   tags:
     - config
-    - debug
   
 - name: redmine secret conf
   template: dest="{{ redmine_path }}/current/config/secrets.yml"
@@ -181,12 +181,7 @@
   when: redmine_prod_secret.changed
   tags:
     - config
-    - debug
 #"
-
-# - name: debug
-#   debug: msg="redmine_db_password is {{ redmine_db_password }}"
-#   tags: debug
 
 - name: enable apache modules
   apache2_module: state=present name={{ item }}
@@ -197,7 +192,6 @@
     - dav_svn
     - dav_fs 
     - rewrite
-  tags: debug
 
 - name: install passenger
   shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
@@ -220,33 +214,27 @@
   notify: reload apache
   tags:
     - config
-    - debug
 
 - name: redmine apache conf
   template: dest=/etc/apache2/sites-available/redmine.conf src=apache/redmine.conf.jinja
   notify: reload apache
   tags:
     - config
-    - debug
   
 - name: enable redmine apache lxc config
   file: state=link src=../sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
   notify: reload apache
   tags:
     - config
-    - debug
 
 - name: redmine apache conf
   template: dest=/etc/apache2/mods-available/redmine.load src=apache/redmine.load.jinja
   notify: reload apache
   tags:
     - config
-    - debug
 
 - name: enable apache redmine module
   apache2_module: state=present name=redmine
-  tags:
-    - debug
 
 - name: Delete default apache conf
   file: dest=/etc/apache2/sites-enabled/000-default.conf
@@ -254,4 +242,4 @@
   notify: apache reload
   when: apache_no_default
   tags:
-    - debug
+    - config

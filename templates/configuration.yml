@@ -1,0 +1,7 @@
+production:
+   email_delivery:
+     delivery_method: :smtp
+     smtp_settings:
+       address: "localhost"
+       enable_starttls_auto: false
+       port: 25
