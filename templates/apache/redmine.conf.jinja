@@ -1,0 +1,27 @@
+<VirtualHost *:80>
+    
+  ServerName $server_name
+  PerlLoadModule Redmine
+
+  DocumentRoot {{ redmine_path }}/current/public
+  Alias /redmine {{ redmine_path }}/current/public
+
+  <Location /redmine>
+    # DocumentRoot {{ redmine_path }}/current/public
+    RailsBaseURI /
+    PassengerAppRoot {{ redmine_path }}/current
+  </Location>
+	
+  <Directory {{ redmine_path }}/current/public>
+    AllowOverride all
+    Options -MultiViews
+    Order allow,deny
+    Allow from all
+    # New directive needed in Apache 2.4.3: 
+    Require all granted
+  </Directory>
+    
+    PassengerUser www-data
+    PassengerGroup www-data
+    
+</VirtualHost>

@@ -1,0 +1,5 @@
+---
+- hosts: redmine
+  sudo: yes
+  roles:
+  - role: redmine

@@ -1,0 +1,257 @@
+---
+- name: apt-get update
+  apt: update_cache=yes
+  ignore_errors: True
+  tags:
+      - install
+
+- name: install deps
+  apt: name={{ item }} state=latest
+  with_items:
+      - curl
+      - git
+      - git-core
+      - subversion
+      - imagemagick
+      - libmagickwand-dev
+      - mysql-server
+      - libmysqlclient-dev
+      - apache2
+      - apache2-dev
+      - libcurl4-gnutls-dev
+      - apache2
+      - libapache2-svn
+      - libapache-dbi-perl 
+      - libapache2-mod-perl2
+      - libdbd-mysql-perl
+      - libauthen-simple-ldap-perl
+      - openssl
+      - python-mysqldb
+  tags:
+      - install
+      
+# - name: install python mysqldb module, required for ansible to manage mysql
+#   pip: name=bottle
+#   tags:
+#       - install
+#       - debug
+
+- name: create redmine_system_user user
+  user: name={{ redmine_system_user }}
+        comment="redmine_system_user"
+        groups=www-data
+        shell=/bin/bash
+        
+- name: allow redmine user to run apt-get update
+  template: dest=/etc/sudoers.d/redmine src=sudoers.d/redmine.yml
+
+- name: check if GPG key is present
+  command: bash -c "gpg -k | grep D39DC0E3"
+  ignore_errors: true
+  register: result
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: Import GPG keys
+  command: 'gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3'
+  changed_when: False
+  when: result|failed
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: install RVM
+  command: bash -c "curl -L https://get.rvm.io | bash -s stable"
+  args:
+    creates: /home/redmine/.rvm/bin/rvm
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: install ruby
+  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm install ruby"
+  sudo_user: "{{ redmine_system_user }}"
+  
+- name: set a default Ruby
+  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm use ruby --default"
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: create redmine dir
+  file: dest={{ redmine_path }}
+        owner={{ redmine_system_user }}
+        group={{ redmine_system_user }}
+        state=directory
+
+- name: check out redmine
+  subversion: repo=https://svn.redmine.org/redmine/branches/3.0-stable dest={{ redmine_path }}/current
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: set permissions on redmine dirs
+  file: dest={{ item }}
+        owner=www-data
+        group=www-data
+        state=directory
+        mode=755
+        recurse=yes
+  with_items:
+    - "{{ redmine_path }}/current/files"
+    - "{{ redmine_path }}/current/log"
+    - "{{ redmine_path }}/current/tmp"
+    - "{{ redmine_path }}/current/public/plugin_assets"
+    - "{{ redmine_path }}/repos/svn"
+    - "{{ redmine_path }}/repos/git"
+
+# - name: set permissions on redmine files
+#   file: dest={{ item }}
+#         owner=www-data
+#         group=www-data
+#         state=file
+#         mode=644
+#   with_items:
+#     - "{{ redmine_path }}/current/files"
+#     - "{{ redmine_path }}/current/log"
+#     - "{{ redmine_path }}/current/tmp"
+#     - "{{ redmine_path }}/current/public/plugin_assets"
+#     - "{{ redmine_path }}/repos/svn"
+#     - "{{ redmine_path }}/repos/git"
+
+- name: set permissions on rdmine dirs
+  file: dest={{ item }}
+        owner=www-data
+        group=www-data
+        state=directory
+        mode=775
+        recurse=yes
+  with_items:
+    - "{{ redmine_path }}/current/log"
+
+# - name: check if redmine db is pupulated
+#   command: mysql redmine
+#   register: redmine_db_status
+#   changed_when: "'Unknown database' in redmine_db_status.stderr"
+#   failed_when: "'Can\\'t connect to local MySQL server' in redmine_db_status.stderr"
+#   tags: debug
+
+- name: create redmine DB
+  mysql_db: name=redmine
+            state=present
+            encoding=utf8
+
+- name: create redmine user
+  mysql_user: name=redmine
+              host=localhost
+              password={{ redmine_db_password }}
+              priv=redmine.*:ALL,GRANT
+              state=present
+
+- name: copy redmine configuration
+  command: cp -p configuration.yml.example configuration.yml
+  args:
+    chdir: "{{ redmine_path }}/current/config"
+    creates: configuration.yml
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: copy DB configuration
+  template: src=database.yml dest="{{ redmine_path }}/current/config/database.yml"
+  sudo_user: "{{ redmine_system_user }}"
+#"
+
+- name: install and run bundler
+  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
+  args:
+    chdir: "{{ redmine_path }}/current"
+  with_items:
+    - gem install bundler
+    - gem install rake
+    - bundle install --without development test
+    - RAILS_ENV=production bundle exec rake db:migrate
+    - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
+  sudo_user: "{{ redmine_system_user }}"
+
+- name: generate new secret
+  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && rake secret'"
+  args:
+    creates: "{{ redmine_path }}/current/config/secrets.yml"
+    chdir: "{{ redmine_path }}/current"
+  register: redmine_prod_secret
+  sudo_user: "{{ redmine_system_user }}"
+  tags:
+    - config
+    - debug
+  
+- name: redmine secret conf
+  template: dest="{{ redmine_path }}/current/config/secrets.yml"
+            src=secrets.yml
+  sudo_user: "{{ redmine_system_user }}"
+  when: redmine_prod_secret.changed
+  tags:
+    - config
+    - debug
+#"
+
+# - name: debug
+#   debug: msg="redmine_db_password is {{ redmine_db_password }}"
+#   tags: debug
+
+- name: enable apache modules
+  apache2_module: state=present name={{ item }}
+  with_items:
+    - ssl
+    - perl
+    - dav
+    - dav_svn
+    - dav_fs 
+    - rewrite
+  tags: debug
+
+- name: install passenger
+  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
+  args:
+    chdir: "{{ redmine_path }}/current"
+  with_items:
+    - gem install passenger
+    - passenger-install-apache2-module -a --languages ruby
+  sudo_user: "{{ redmine_system_user }}"
+
+
+- include: passenger.12.04.yml
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+
+- include: passenger.14.04.yml
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  
+- name: link Redmine.pm
+  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache/Redmine.pm
+  notify: reload apache
+  tags:
+    - config
+    - debug
+
+- name: redmine apache conf
+  template: dest=/etc/apache2/sites-available/redmine.conf src=apache/redmine.conf.jinja
+  notify: reload apache
+  tags:
+    - config
+    - debug
+  
+- name: enable redmine apache lxc config
+  file: state=link src=../sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
+  notify: reload apache
+  tags:
+    - config
+    - debug
+
+- name: redmine apache conf
+  template: dest=/etc/apache2/mods-available/redmine.load src=apache/redmine.load.jinja
+  notify: reload apache
+  tags:
+    - config
+    - debug
+
+- name: enable apache redmine module
+  apache2_module: state=present name=redmine
+  tags:
+    - debug
+
+- name: Delete default apache conf
+  file: dest=/etc/apache2/sites-enabled/000-default.conf
+        state=absent
+  notify: apache reload
+  when: apache_no_default
+  tags:
+    - debug
