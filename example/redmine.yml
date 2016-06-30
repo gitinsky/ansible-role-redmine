@@ -1,5 +1,7 @@
 ---
 - hosts: redmine
-  sudo: yes
+  become: yes
+  become_method: sudo
   roles:
   - role: redmine
+    redmine_svn_version: 3.3

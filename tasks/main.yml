@@ -21,7 +21,7 @@
       - libcurl4-gnutls-dev
       - apache2
       - libapache2-svn
-      - libapache-dbi-perl 
+      - libapache-dbi-perl
       - libapache2-mod-perl2
       - libdbd-mysql-perl
       - libauthen-simple-ldap-perl
@@ -29,13 +29,13 @@
       - python-mysqldb
   tags:
       - install
-      
+
 - name: create redmine_system_user user
   user: name={{ redmine_system_user }}
         comment="redmine_system_user"
         groups=www-data
         shell=/bin/bash
-        
+
 - name: allow redmine user to run apt-get update
   template: dest=/etc/sudoers.d/redmine src=sudoers.d/redmine.yml
 
@@ -43,27 +43,27 @@
   command: bash -c "gpg -k | grep D39DC0E3"
   ignore_errors: true
   register: result
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
 
 - name: Import GPG keys
   command: 'gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3'
   changed_when: False
   when: result|failed
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
 
 - name: install RVM
   command: bash -c "curl -L https://get.rvm.io | bash -s stable"
   args:
     creates: /home/redmine/.rvm/bin/rvm
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
 
 - name: install ruby
   command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm install ruby"
-  sudo_user: "{{ redmine_system_user }}"
-  
+  become_user: "{{ redmine_system_user }}"
+
 - name: set a default Ruby
   command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm use ruby --default"
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
 
 - name: create redmine dir
   file: dest={{ redmine_path }}
@@ -72,8 +72,8 @@
         state=directory
 
 - name: check out redmine
-  subversion: repo=https://svn.redmine.org/redmine/branches/3.0-stable dest={{ redmine_path }}/current
-  sudo_user: "{{ redmine_system_user }}"
+  subversion: repo=https://svn.redmine.org/redmine/branches/{{ redmine_svn_version }}-stable dest={{ redmine_path }}/current
+  become_user: "{{ redmine_system_user }}"
 
 - name: set permissions on redmine dirs
   file: dest={{ item }}
@@ -132,25 +132,15 @@
               priv=redmine.*:ALL,GRANT
               state=present
 
-- name: copy redmine configuration
-  command: cp -p configuration.yml.example configuration.yml
-  args:
-    chdir: "{{ redmine_path }}/current/config"
-    creates: configuration.yml
-  sudo_user: "{{ redmine_system_user }}"
-
 - name: copy DB configuration
-  template: src=database.yml dest="{{ redmine_path }}/current/config/database.yml"
-  sudo_user: "{{ redmine_system_user }}"
+  template: src=database.yml dest="{{ redmine_path }}/current/config/database.yml" owner="{{ redmine_system_user }}"
   notify: reload apache
   tags: config
 
 - name: copy redmine configuration
-  template: src=configuration.yml dest="{{ redmine_path }}/current/config/configuration.yml"
-  sudo_user: "{{ redmine_system_user }}"
+  template: src=configuration.yml dest="{{ redmine_path }}/current/config/configuration.yml" owner="{{ redmine_system_user }}"
   notify: reload apache
   tags: config
-#"
 
 - name: install and run bundler
   shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
@@ -162,7 +152,7 @@
     - bundle install --without development test
     - RAILS_ENV=production bundle exec rake db:migrate
     - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
 
 - name: generate new secret
   shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && rake secret'"
@@ -170,18 +160,16 @@
     creates: "{{ redmine_path }}/current/config/secrets.yml"
     chdir: "{{ redmine_path }}/current"
   register: redmine_prod_secret
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
   tags:
     - config
-  
+
 - name: redmine secret conf
-  template: dest="{{ redmine_path }}/current/config/secrets.yml"
+  template: dest="{{ redmine_path }}/current/config/secrets.yml" owner="{{ redmine_system_user }}"
             src=secrets.yml
-  sudo_user: "{{ redmine_system_user }}"
   when: redmine_prod_secret.changed
   tags:
     - config
-#"
 
 - name: enable apache modules
   apache2_module: state=present name={{ item }}
@@ -190,7 +178,7 @@
     - perl
     - dav
     - dav_svn
-    - dav_fs 
+    - dav_fs
     - rewrite
 
 - name: install passenger
@@ -199,16 +187,22 @@
     chdir: "{{ redmine_path }}/current"
   with_items:
     - gem install passenger
+    - gem update --system --no-ri --no-rdoc
     - passenger-install-apache2-module -a --languages ruby
-  sudo_user: "{{ redmine_system_user }}"
+  become_user: "{{ redmine_system_user }}"
+  tags: debug
+  # ignore_errors: true
+  register: result
 
+- debug: var=result
+  tags: debug
 
 - include: passenger.12.04.yml
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
 
 - include: passenger.14.04.yml
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
-  
+
 - name: link Redmine.pm
   file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache/Redmine.pm
   notify: reload apache
@@ -220,7 +214,7 @@
   notify: reload apache
   tags:
     - config
-  
+
 - name: enable redmine apache lxc config
   file: state=link src=../sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
   notify: reload apache

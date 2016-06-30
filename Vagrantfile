@@ -5,6 +5,7 @@
 defaultbox = "ubuntu/trusty64"
 box = ENV['BOX'] || defaultbox
 ENV['ANSIBLE_ROLES_PATH'] = "../../roles"
+ENV['ANSIBLE_SSH_PIPELINING'] = "1"
 
 Vagrant.configure(2) do |config|
 
