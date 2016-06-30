@@ -5,3 +5,4 @@
   roles:
   - role: redmine
     redmine_svn_version: 3.3
+    redmine_apache_port: 8048

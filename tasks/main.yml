@@ -174,7 +174,6 @@
 - name: enable apache modules
   apache2_module: state=present name={{ item }}
   with_items:
-    - ssl
     - perl
     - dav
     - dav_svn
@@ -224,6 +223,13 @@
 - name: redmine apache conf
   template: dest=/etc/apache2/mods-available/redmine.load src=apache/redmine.load.jinja
   notify: reload apache
+  tags:
+    - config
+
+- name: upload apache ports conf
+  template: dest=/etc/apache2/ports.conf src=apache/ports.conf
+  notify: reload apache
+  when: replace_apache_ports_conf
   tags:
     - config
 

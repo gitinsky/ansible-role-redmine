@@ -1,4 +1,4 @@
-<VirtualHost *:80>
+<VirtualHost *:{{ redmine_apache_port }}>
     
   ServerName $server_name
   PerlLoadModule Redmine
