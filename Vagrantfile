@@ -15,6 +15,7 @@ Vagrant.configure(2) do |config|
   
   config.vm.define "redmine14" do |redmine_cfg|
     redmine_cfg.vm.network :forwarded_port, host: 8014, guest:  8048
+    redmine_cfg.vm.network "private_network", type: "dhcp"
     redmine_cfg.vm.provider :virtualbox do |v|
       v.name = "redmine-14.04"
       v.memory = 2048

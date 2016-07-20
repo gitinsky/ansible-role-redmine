@@ -123,7 +123,7 @@
 - name: create redmine DB
   mysql_db: name=redmine
             state=present
-            encoding=utf8
+            encoding=utf8mb4
 
 - name: create redmine user
   mysql_user: name=redmine
