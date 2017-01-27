@@ -30,10 +30,11 @@
   tags:
       - install
 
+# Add the user to rvm group to allow write when installing with gem
 - name: create redmine_system_user user
   user: name={{ redmine_system_user }}
         comment="redmine_system_user"
-        groups=www-data
+        groups=www-data,rvm
         shell=/bin/bash
 
 - name: allow redmine user to run apt-get update
@@ -51,9 +52,19 @@
   when: result|failed
   become_user: "{{ redmine_system_user }}"
 
-# Removed Install RVM, install ruby and set default ruby tasks due to be
-# duplicated in ruby-rvm role
-# https://github.com/gitinsky/ansible-role-ruby-rvm
+- name: install RVM
+  command: bash -c "curl -L https://get.rvm.io | bash -s stable"
+  args:
+    creates: /home/redmine/.rvm/bin/rvm
+  become_user: "{{ redmine_system_user }}"
+
+- name: install ruby
+  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm install ruby"
+  become_user: "{{ redmine_system_user }}"
+
+- name: set a default Ruby
+  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm use ruby --default"
+  become_user: "{{ redmine_system_user }}"
 
 - name: create redmine dir
   file: dest={{ redmine_path }}
