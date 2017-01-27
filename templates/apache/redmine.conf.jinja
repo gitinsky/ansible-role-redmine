@@ -1,7 +1,10 @@
+# Information extracted http://www.redmine.org/projects/redmine/wiki/Repositories_access_control_with_apache_mod_dav_svn_and_mod_perl
+# {{ ansible_managed }}
+
 <VirtualHost *:{{ redmine_apache_port }}>
     
   ServerName $server_name
-  PerlLoadModule Redmine
+  PerlLoadModule Apache::Redmine
 
   DocumentRoot {{ redmine_path }}/current/public
   Alias /redmine {{ redmine_path }}/current/public

@@ -51,19 +51,9 @@
   when: result|failed
   become_user: "{{ redmine_system_user }}"
 
-- name: install RVM
-  command: bash -c "curl -L https://get.rvm.io | bash -s stable"
-  args:
-    creates: /home/redmine/.rvm/bin/rvm
-  become_user: "{{ redmine_system_user }}"
-
-- name: install ruby
-  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm install ruby"
-  become_user: "{{ redmine_system_user }}"
-
-- name: set a default Ruby
-  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm use ruby --default"
-  become_user: "{{ redmine_system_user }}"
+# Removed Install RVM, install ruby and set default ruby tasks due to be
+# duplicated in ruby-rvm role
+# https://github.com/gitinsky/ansible-role-ruby-rvm
 
 - name: create redmine dir
   file: dest={{ redmine_path }}
@@ -208,6 +198,12 @@
   tags:
     - config
 
+- name: link apache2 Redmine.pm
+  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache2/Redmine.pm
+  notify: reload apache
+  tags:
+    - config
+
 - name: redmine apache conf
   template: dest=/etc/apache2/sites-available/redmine.conf src=apache/redmine.conf.jinja
   notify: reload apache
@@ -235,6 +231,7 @@
 
 - name: enable apache redmine module
   apache2_module: state=present name=redmine
+  ignore_errors: yes
 
 - name: Delete default apache conf
   file: dest=/etc/apache2/sites-enabled/000-default.conf
