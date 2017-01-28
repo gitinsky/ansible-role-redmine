@@ -13,3 +13,7 @@ Applied with ansible 1.8.4.
 Reposytory support is not implemented yet.
 
 Role removes default apache config file.
+
+# Oficial documentation: 
+
+http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
