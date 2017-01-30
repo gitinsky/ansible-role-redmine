@@ -81,7 +81,7 @@
         owner=www-data
         group=www-data
         state=directory
-        mode=755
+        mode=775
         recurse=yes
   with_items:
     - "{{ redmine_path }}/current/files"
