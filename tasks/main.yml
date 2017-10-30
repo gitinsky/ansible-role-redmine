@@ -151,7 +151,7 @@
     - gem install bundler
     - gem install rake
     - gem install bundler --pre
-    - bundle update nokogiri
+    #- bundle update nokogiri
     - bundle update
     - bundle install --without development test
     - RAILS_ENV=production bundle exec rake db:migrate
