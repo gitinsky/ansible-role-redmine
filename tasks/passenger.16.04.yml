@@ -7,7 +7,7 @@
   become: yes
   become_user: redmine
   become_method: su
-  become_flags: '/bin/bash -c'
+  become_flags: '-c'
   tags: config
 
 - name: link passenger.conf
