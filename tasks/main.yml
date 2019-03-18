@@ -126,6 +126,7 @@
     chdir: "{{ redmine_path }}/current"
   with_items:
     #- bundle update nokogiri
+    - gem install tzinfo-data
     - bundle _{{ redmine_bundle_version }}_ update
     - bundle _{{ redmine_bundle_version }}_ install --without development test
     - RAILS_ENV=production bundle exec rake db:migrate
