@@ -23,7 +23,7 @@ This role depends on ruby-rvm role, you must create `requirements.yml` ans use `
 Example file:
 
 ```yaml
-- src: https://github.com/gitinsky/ansible-role-ruby-rvm.git
+- src: https://github.com/CoffeeITWorks/ansible-role-ruby-rvm.git
   name: ruby-rvm
 ```
 
