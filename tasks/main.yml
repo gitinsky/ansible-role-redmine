@@ -9,9 +9,10 @@
 #- name: include rvm and ruby install
 #  import_tasks: ruby_rvm.yml
 
+# Now mysql-server package is installed by dependencies
 - name: install deps
   apt: 
-    name: ['curl', 'git', 'git-core', 'subversion', 'imagemagick', 'libmagickwand-dev', 'mysql-server',
+    name: ['curl', 'git', 'git-core', 'subversion', 'imagemagick', 'libmagickwand-dev',
            'libmysqlclient-dev', 'apache2', 'apache2-dev', 'libcurl4-gnutls-dev',
            'libapache2-svn', 'libapache-dbi-perl', 'libapache2-mod-perl2', 'libdbd-mysql-perl',
            'libauthen-simple-ldap-perl', 'openssl', 'python-mysqldb']

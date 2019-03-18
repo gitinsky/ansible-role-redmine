@@ -1,5 +1,6 @@
 ---
 dependencies:
-  - { role: ruby-rvm }
+  - role: ruby-rvm
+  - role: geerlingguy.mysql
 
 # Install from: https://github.com/gitinsky/ansible-role-ruby-rvm

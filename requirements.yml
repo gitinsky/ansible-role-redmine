@@ -8,3 +8,6 @@
 
 - src: https://github.com/CoffeeITWorks/ansible-role-ruby-rvm.git
   name: ruby-rvm
+
+- src: geerlingguy.mysql
+  name: geerlingguy.mysql
