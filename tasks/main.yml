@@ -116,6 +116,7 @@
     - gem install bundler
     - gem install rake
     - gem install bundler --pre
+    - gem install rubygems-bundler
     #- bundle update nokogiri
     - bundle update
     - bundle install --without development test

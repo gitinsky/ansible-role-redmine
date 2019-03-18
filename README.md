@@ -45,6 +45,8 @@ http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
 - hosts: redmine_servers
   become: yes
   become_method: sudo
+  vars:
+    ruby_version: '2.3.6'  # Depends on your redmine version
   environment: "{{ proxy_env }}"
   roles:
 
