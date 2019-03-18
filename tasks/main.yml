@@ -1,4 +1,8 @@
 ---
+
+# Multi-OS vars
+- include: multi_os.yml
+
 # Dependencies
 - name: apt-get update
   apt: update_cache=yes
@@ -161,23 +165,21 @@
   tags: debug
 
 - include: passenger.12.04.yml
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
-
-- include: passenger.14.04.yml
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  when: not passenger_1604_plus
 
 - include: passenger.16.04.yml
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04'"
+  when: passenger_1604_plus
 
 #  Perl for Apache
 - name: link Redmine.pm
-  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache/Redmine.pm
+  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest={{ perl_modules_html }}/Redmine.pm
   notify: reload apache
   tags:
     - config
 
 - name: link apache2 Redmine.pm
   file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache2/Redmine.pm
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
   notify: reload apache
   tags:
     - config

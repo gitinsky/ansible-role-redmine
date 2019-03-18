@@ -1,0 +1,5 @@
+---
+
+perl_modules_path: '/usr/lib/perl5'
+perl_modules_html: '{{ perl_modules_path }}/Apache2'
+passenger_1604_plus: False

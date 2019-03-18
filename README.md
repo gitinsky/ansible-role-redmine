@@ -69,3 +69,7 @@ http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
     - role: postfix_client
       tags: [ "postfix_clients", "redmine_servers_all" ]
 ```
+
+## Other external links
+
+https://www.vultr.com/docs/how-to-install-redmine-on-ubuntu-16-04
