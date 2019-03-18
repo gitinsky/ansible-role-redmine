@@ -1,5 +1,5 @@
 ---
 
 perl_modules_path: '/usr/share/perl5'
-perl_modules_html: '{{ perl_modules_path }}/Apache2'
+perl_modules_html: '{{ perl_modules_path }}/Apache'
 passenger_1604_plus: True
