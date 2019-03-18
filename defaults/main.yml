@@ -13,7 +13,8 @@ ruby_version: '2.3.6'
 # bundler (< 2.0, >= 1.3.0)\n\n  Current Bundler version:\n    
 # bundler (2.0.1)\nThis Gemfile requires a different version of Bundler
 # https://github.com/bundler/bundler/blob/1-17-stable/CHANGELOG.md
-redmine_bundler_gem: "bundler --version '1.17.1'"
+# https://bundler.io/guides/bundler_2_upgrade.html#what-happens-if-my-application-needs-bundler-1-but-i-only-have-bundler-2-installed
+redmine_bundler_gem: 'bundler -v "~>1.0" '
 
 redmine_apache_port: 80
 replace_apache_ports_conf: yes

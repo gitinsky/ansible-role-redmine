@@ -108,16 +108,17 @@
   notify: reload apache
   tags: config
 
+# https://makandracards.com/makandra/9741-run-specific-version-of-bundler
+# https://github.com/bundler/bundler/blob/master/doc/TROUBLESHOOTING.md
 - name: install and run bundler
   shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
-    - gem uninstall bundler
-    - gem install {{ redmine_bundler_gem }}
-    - gem install rake
+    - gem install --user-install {{ redmine_bundler_gem }}
+    - gem install --user-install rake
     #- gem install bundler --pre
-    - gem install rubygems-bundler
+    - gem install --user-install rubygems-bundler
     #- bundle update nokogiri
     - bundle update
     - bundle install --without development test
