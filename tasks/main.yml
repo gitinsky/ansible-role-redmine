@@ -115,7 +115,7 @@
   with_items:
     - gem install {{ redmine_bundler_gem }}
     - gem install rake
-    - gem install bundler --pre
+    #- gem install bundler --pre
     - gem install rubygems-bundler
     #- bundle update nokogiri
     - bundle update
