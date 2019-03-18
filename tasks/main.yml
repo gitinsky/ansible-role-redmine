@@ -6,6 +6,9 @@
   tags:
       - install
 
+#- name: include rvm and ruby install
+#  import_tasks: ruby_rvm.yml
+
 - name: install deps
   apt: 
     name: ['curl', 'git', 'git-core', 'subversion', 'imagemagick', 'libmagickwand-dev', 'mysql-server',
@@ -25,9 +28,6 @@
 
 - name: allow redmine user to run apt-get update
   template: dest=/etc/sudoers.d/redmine src=sudoers.d/redmine.yml
-
-- name: include rvm and ruby install
-  import_tasks: ruby_rvm.yml
 
 # Redmine 
 - name: create redmine dir
@@ -108,7 +108,7 @@
   tags: config
 
 - name: install and run bundler
-  shell: "bash -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && {{ item }}'"
+  shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
@@ -123,7 +123,7 @@
   become_user: "{{ redmine_system_user }}"
 
 - name: generate new secret
-  shell: "bash -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && rake secret'"
+  shell: "bash -c 'source {{ rvm_path }} && rake secret'"
   args:
     creates: "{{ redmine_path }}/current/config/secrets.yml"
     chdir: "{{ redmine_path }}/current"
@@ -151,7 +151,7 @@
     - rewrite
 
 - name: install passenger
-  shell: "bash -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && {{ item }}'"
+  shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:

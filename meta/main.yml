@@ -1,5 +1,5 @@
 ---
-#dependencies:
-#  - { role: ruby-rvm }
+dependencies:
+  - { role: ruby-rvm }
 
 # Install from: https://github.com/gitinsky/ansible-role-ruby-rvm

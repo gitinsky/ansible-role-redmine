@@ -7,3 +7,5 @@ redmine_svn_version: 3.3
 redmine_apache_port: 80
 replace_apache_ports_conf: yes
 redmine_email_domain: localdomain.local
+#rvm_path: /home/{{ redmine_system_user }}/.rvm/scripts/rvm
+rvm_path: /usr/local/rvm/scripts/rvm
