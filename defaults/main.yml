@@ -3,10 +3,18 @@ redmine_path: /opt/redmine
 redmine_db_password: "{{ ansible_default_ipv4.macaddress | md5 | truncate(10,True,'') }}"
 redmine_system_user: redmine
 apache_no_default: yes
+
 # https://www.redmine.org/projects/redmine/wiki/RedmineInstall
 redmine_svn_version: 3.3
 # This variable is used by role ruby-rvm
 ruby_version: '2.3.6'
+# To avoid errors like this we need to specify the bundler version:
+# rails (= 4.2.11) was resolved to 4.2.11, which depends on\n      
+# bundler (< 2.0, >= 1.3.0)\n\n  Current Bundler version:\n    
+# bundler (2.0.1)\nThis Gemfile requires a different version of Bundler
+# https://github.com/bundler/bundler/blob/1-17-stable/CHANGELOG.md
+redmine_bundler_gem: 'bundler -v 1.17.1'
+
 redmine_apache_port: 80
 replace_apache_ports_conf: yes
 redmine_email_domain: localdomain.local
