@@ -6,9 +6,6 @@
   tags:
       - install
 
-#- name: include rvm and ruby install
-#  import_tasks: ruby_rvm.yml
-
 # Now mysql-server package is installed by dependencies
 - name: install deps
   apt: 
@@ -55,20 +52,6 @@
     - "{{ redmine_path }}/current/public/plugin_assets"
     - "{{ redmine_path }}/repos/svn"
     - "{{ redmine_path }}/repos/git"
-
-# - name: set permissions on redmine files
-#   file: dest={{ item }}
-#         owner=www-data
-#         group=www-data
-#         state=file
-#         mode=644
-#   with_items:
-#     - "{{ redmine_path }}/current/files"
-#     - "{{ redmine_path }}/current/log"
-#     - "{{ redmine_path }}/current/tmp"
-#     - "{{ redmine_path }}/current/public/plugin_assets"
-#     - "{{ redmine_path }}/repos/svn"
-#     - "{{ redmine_path }}/repos/git"
 
 - name: set permissions on rdmine dirs
   file: dest={{ item }}
@@ -127,8 +110,8 @@
   with_items:
     #- bundle update nokogiri
     - gem install tzinfo-data
-    - bundle _{{ redmine_bundle_version }}_ update
-    - bundle _{{ redmine_bundle_version }}_ install --without development test
+    - bundle _{{ redmine_bundle_version }}_ update  # _1.17.3_ specifying version is temporal workaround for redmine < 4
+    - bundle _{{ redmine_bundle_version }}_ install --without development test # _1.17.3_ specifying version is temporal workaround for redmine < 4
     - RAILS_ENV=production bundle exec rake db:migrate
     - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
   become_user: "{{ redmine_system_user }}"
