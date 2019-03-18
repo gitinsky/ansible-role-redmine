@@ -1,5 +1,7 @@
 # ansible-role-redmine
 
+[![Build Status](https://travis-ci.org/CoffeeITWorks/ansible-role-redmine.svg?branch=master)](https://travis-ci.org/CoffeeITWorks/ansible-role-redmine)
+
 This role performs basic redmine 3.3.0 installation with apache and passenger. You have to add https support on your own, feel free to install redmine to lxc container managed by [this role](https://github.com/gitinsky/ansible-role-lxc)
 
 Get with ```git clone https://github.com/gitinsky/ansible-role-redmine.git roles/redmine```.
@@ -10,10 +12,46 @@ Ubuntu 12.04 support is currently broken due to sudoers issues.
 
 Applied with ansible 1.8.4.
 
-Reposytory support is not implemented yet.
+Repository support is not implemented yet.
 
 Role removes default apache config file.
 
-# Oficial documentation: 
+## Vars
+
+Check them out on [defaults/main.yml](defaults/main.yml)
+
+You can change the redmine version with:
+
+    redmine_svn_version: 3.3
+
+## Oficial documentation
 
 http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
+
+## Example playbook
+
+```yaml
+- hosts: redmine_servers
+  become: yes
+  become_method: sudo
+  environment: "{{ proxy_env }}"
+  roles:
+
+    - role: ansible_redmine
+      tags: [ "redmine_servers" ]
+
+    - role: ansible_redmine_plugins
+      tags: [ "redmine_servers", "redmine_servers_plugins"]
+
+    - role: ansible_redmine_git_sync
+      tags: [ "redmine_servers", "redmine_servers_git_sync"]
+
+    - role: ansible_redmine_emails
+      tags: [ "redmine_servers", "redmine_servers_emails"]
+
+    #- role: ansible_redmine_backup
+    #  tags: [ "redmine_servers", "redmine_servers_backup"]
+
+    - role: postfix_client
+      tags: [ "postfix_clients", "redmine_servers_all" ]
+```
