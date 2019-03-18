@@ -6,26 +6,12 @@
       - install
 
 - name: install deps
-  apt: name={{ item }} state=latest
-  with_items:
-      - curl
-      - git
-      - git-core
-      - subversion
-      - imagemagick
-      - libmagickwand-dev
-      - mysql-server
-      - libmysqlclient-dev
-      - apache2
-      - apache2-dev
-      - libcurl4-gnutls-dev
-      - libapache2-svn
-      - libapache-dbi-perl
-      - libapache2-mod-perl2
-      - libdbd-mysql-perl
-      - libauthen-simple-ldap-perl
-      - openssl
-      - python-mysqldb
+  apt: 
+    name: ['curl', 'git', 'git-core', 'subversion', 'imagemagick', 'libmagickwand-dev', 'mysql-server',
+           'libmysqlclient-dev', 'apache2', 'apache2-dev', 'libcurl4-gnutls-dev',
+           'libapache2-svn', 'libapache-dbi-perl', 'libapache2-mod-perl2', 'libdbd-mysql-perl',
+           'libauthen-simple-ldap-perl', 'openssl', 'python-mysqldb']
+    state: latest
   tags:
       - install
 
@@ -48,7 +34,7 @@
 - name: Import GPG keys
   command: 'gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3'
   changed_when: False
-  when: result|failed
+  when: result is failed
   become_user: "{{ redmine_system_user }}"
 
 - name: install RVM
@@ -58,11 +44,11 @@
   become_user: "{{ redmine_system_user }}"
 
 - name: install ruby
-  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm install ruby"
+  command: bash -c "source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && rvm install ruby"
   become_user: "{{ redmine_system_user }}"
 
 - name: set a default Ruby
-  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm use ruby --default"
+  command: bash -c "source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && rvm use ruby --default"
   become_user: "{{ redmine_system_user }}"
 
 - name: create redmine dir
@@ -143,7 +129,7 @@
   tags: config
 
 - name: install and run bundler
-  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
+  shell: "bash -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
@@ -158,7 +144,7 @@
   become_user: "{{ redmine_system_user }}"
 
 - name: generate new secret
-  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && rake secret'"
+  shell: "bash -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && rake secret'"
   args:
     creates: "{{ redmine_path }}/current/config/secrets.yml"
     chdir: "{{ redmine_path }}/current"
@@ -184,7 +170,7 @@
     - rewrite
 
 - name: install passenger
-  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
+  shell: "bash -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
