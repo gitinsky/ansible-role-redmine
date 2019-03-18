@@ -110,15 +110,22 @@
 
 # https://makandracards.com/makandra/9741-run-specific-version-of-bundler
 # https://github.com/bundler/bundler/blob/master/doc/TROUBLESHOOTING.md
-- name: install and run bundler
+- name: Install bundler
   shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
-    - 'gem install --user-install bundler -v "~>1.0"'
-    - gem install --user-install rake
     #- gem install bundler --pre
     #- gem install --user-install rubygems-bundler
+    - gem install {{ redmine_bundler_gem }}
+    - gem install rake
+  become: yes
+
+- name: run bundler
+  shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
+  args:
+    chdir: "{{ redmine_path }}/current"
+  with_items:
     #- bundle update nokogiri
     - bundle update
     - bundle install --without development test
