@@ -113,6 +113,7 @@
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
+    - gem uninstall bundler
     - gem install {{ redmine_bundler_gem }}
     - gem install rake
     #- gem install bundler --pre
