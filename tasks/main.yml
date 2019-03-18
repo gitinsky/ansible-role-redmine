@@ -220,11 +220,12 @@
 - name: enable apache redmine module
   apache2_module: state=present name=redmine
   ignore_errors: yes
+  notify: reload apache
 
 - name: Delete default apache conf
   file: dest=/etc/apache2/sites-enabled/000-default.conf
         state=absent
-  notify: apache reload
+  notify: reload apache
   when: apache_no_default
   tags:
     - config
