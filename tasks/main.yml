@@ -170,6 +170,14 @@
 - include: passenger.16.04.yml
   when: passenger_1604_plus
 
+- name: Ensure perl_modules_Apache2 exists
+  file:
+    path: perl_modules_html
+    state: directory
+    owner: root
+    group: root
+    mode: u+rwx,g+rx,o+rx
+
 #  Perl for Apache
 - name: link Redmine.pm
   file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest={{ perl_modules_html }}/Redmine.pm
