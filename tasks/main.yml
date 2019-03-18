@@ -1,4 +1,5 @@
 ---
+# Dependencies
 - name: apt-get update
   apt: update_cache=yes
   ignore_errors: True
@@ -25,35 +26,10 @@
 - name: allow redmine user to run apt-get update
   template: dest=/etc/sudoers.d/redmine src=sudoers.d/redmine.yml
 
-# http://rvm.io/rvm/install
-- name: Import GPG keys
-  command: 'gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB'
-  register: rvm_key_import
-  changed_when: "'imported:' in rvm_key_import.stderr"
-  when: result.rc > 0
-  become_user: "{{ redmine_system_user }}"
-  tags: rvm
+- name: include rvm and ruby install
+  import_tasks: ruby_rvm.yml
 
-# - name: Import GPG keys
-#   apt_key: url=http://keys.gnupg.net/pks/lookup?op=get&fingerprint=on&search=0xD39DC0E3 state=present
-
-- name: update CA as they might be missing in lxc containers
-  command: update-ca-certificates
-  when: "result_rvm.rc > 0 and ansible_os_family == 'Debian'"
-  become_user: "{{ redmine_system_user }}"
-  tags: rvm
-
-- name: install RVM stable with ruby on home for redmine user
-  command: bash -c "curl -sSL https://get.rvm.io| bash -s stable --ruby"
-  become: yes
-  when: result_rvm.rc > 0
-  become_user: "{{ redmine_system_user }}"
-  tags: rvm
-
-- name: set a default Ruby
-  command: bash -c "source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && rvm use ruby --default"
-  become_user: "{{ redmine_system_user }}"
-
+# Redmine 
 - name: create redmine dir
   file: dest={{ redmine_path }}
         owner={{ redmine_system_user }}
@@ -162,7 +138,9 @@
   when: redmine_prod_secret.changed
   tags:
     - config
+### End redmine
 
+# Apache
 - name: enable apache modules
   apache2_module: state=present name={{ item }}
   with_items:
@@ -197,6 +175,7 @@
 - include: passenger.16.04.yml
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04'"
 
+#  Perl for Apache
 - name: link Redmine.pm
   file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache/Redmine.pm
   notify: reload apache
@@ -245,3 +224,4 @@
   when: apache_no_default
   tags:
     - config
+### End apache
