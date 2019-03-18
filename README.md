@@ -16,6 +16,17 @@ Repository support is not implemented yet.
 
 Role removes default apache config file.
 
+## Dependency
+
+This role depends on ruby-rvm role, you must create `requirements.yml` ans use `ansible-galaxy install -r requirements.yml`
+
+Example file:
+
+```yaml
+- src: https://github.com/gitinsky/ansible-role-ruby-rvm.git
+  name: ruby-rvm
+```
+
 ## Vars
 
 Check them out on [defaults/main.yml](defaults/main.yml)
@@ -39,6 +50,7 @@ http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
 
     - role: ansible_redmine
       tags: [ "redmine_servers" ]
+      # This role requires ruby-rvm
 
     - role: ansible_redmine_plugins
       tags: [ "redmine_servers", "redmine_servers_plugins"]

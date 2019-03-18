@@ -2,3 +2,9 @@
 #- src: https://github.com/lcacciagioni/supervisord
 #  version: master
 #  name: supervisord
+
+# gitinsky
+## It is required for ansible-role-redmine
+
+- src: https://github.com/gitinsky/ansible-role-ruby-rvm.git
+  name: ruby-rvm
