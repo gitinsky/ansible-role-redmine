@@ -14,7 +14,8 @@ ruby_version: '2.4.5'
 # bundler (2.0.1)\nThis Gemfile requires a different version of Bundler
 # https://github.com/bundler/bundler/blob/1-17-stable/CHANGELOG.md
 # https://bundler.io/guides/bundler_2_upgrade.html#what-happens-if-my-application-needs-bundler-1-but-i-only-have-bundler-2-installed
-redmine_bundler_gem: 'bundler -v "~>1.0"'
+redmine_bundle_version: 1.17.3
+redmine_bundler_gem: 'bundler -v "{{ redmine_bundle_version }}"'
 # redmine 3.4 supports bundler 2.0
 # http://www.redmine.org/projects/redmine/wiki/Changelog_3_4
 

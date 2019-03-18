@@ -115,7 +115,6 @@
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
-    #- gem install bundler --pre
     #- gem install --user-install rubygems-bundler
     - gem install {{ redmine_bundler_gem }}
     - gem install rake
@@ -127,8 +126,8 @@
     chdir: "{{ redmine_path }}/current"
   with_items:
     #- bundle update nokogiri
-    - bundle update
-    - bundle install --without development test
+    - bundle _{{ redmine_bundle_version }}_ update
+    - bundle _{{ redmine_bundle_version }}_ install --without development test
     - RAILS_ENV=production bundle exec rake db:migrate
     - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
   become_user: "{{ redmine_system_user }}"
