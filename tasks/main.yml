@@ -106,7 +106,7 @@
     - gem install {{ redmine_bundler_gem }}
     - gem install rake
   become: yes
-  changes_when: false
+  changed_when: false
 
 - name: run bundler
   shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
