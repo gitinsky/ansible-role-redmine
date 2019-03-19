@@ -26,6 +26,8 @@
   user: name={{ redmine_system_user }}
         comment="redmine_system_user"
         groups=www-data,rvm
+        append=yes
+        group=www-data
         shell=/bin/bash
 
 - name: allow redmine user to run apt-get update
@@ -33,21 +35,26 @@
 
 # Redmine 
 - name: create redmine dir
-  file: dest={{ redmine_path }}
-        owner={{ redmine_system_user }}
-        group={{ redmine_system_user }}
-        state=directory
+  file: 
+    dest: {{ redmine_path }}
+    owner: {{ redmine_system_user }}
+    group: {{ redmine_system_user }}
+    mode: u+rwx,g+rwx,o+rx
+    state: directory
 
 - name: check out redmine
-  subversion: repo=https://svn.redmine.org/redmine/branches/{{ redmine_svn_version }}-stable dest={{ redmine_path }}/current
+  subversion: 
+    repo: "https://svn.redmine.org/redmine/branches/{{ redmine_svn_version }}-stable"
+    dest: "{{ redmine_path }}/current"
   become_user: "{{ redmine_system_user }}"
+  become: yes
 
 - name: set permissions on redmine dirs
   file: dest={{ item }}
         owner=www-data
         group=www-data
         state=directory
-        mode=775
+        mode=u+rwxs,g+rwxs,o+rx
         recurse=yes
   with_items:
     - "{{ redmine_path }}/current/files"
@@ -56,13 +63,14 @@
     - "{{ redmine_path }}/current/public/plugin_assets"
     - "{{ redmine_path }}/repos/svn"
     - "{{ redmine_path }}/repos/git"
+    - "{{ redmine_plugins_dir }}"
 
 - name: set permissions on rdmine dirs
   file: dest={{ item }}
         owner=www-data
         group=www-data
         state=directory
-        mode=775
+        mode=u+rwxs,g+rwxs,o+rx
         recurse=yes
   with_items:
     - "{{ redmine_path }}/current/log"
@@ -99,12 +107,13 @@
 # https://github.com/bundler/bundler/blob/master/doc/TROUBLESHOOTING.md
 - name: Install bundler
   shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
-  args:
-    chdir: "{{ redmine_path }}/current"
+  #args:
+  #  chdir: "{{ redmine_path }}/current"
   with_items:
     #- gem install --user-install rubygems-bundler
     - gem install {{ redmine_bundler_gem }}
     - gem install rake
+    - gem install tzinfo-data
   become: yes
   changed_when: false
 
@@ -114,12 +123,12 @@
     chdir: "{{ redmine_path }}/current"
   with_items:
     #- bundle update nokogiri
-    - gem install tzinfo-data
     - bundle _{{ redmine_bundle_version }}_ update  # _1.17.3_ specifying version is temporal workaround for redmine < 4
     - bundle _{{ redmine_bundle_version }}_ install --without development test # _1.17.3_ specifying version is temporal workaround for redmine < 4
     - RAILS_ENV=production bundle exec rake db:migrate
     - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
   become_user: "{{ redmine_system_user }}"
+  become: yes
   changed_when: false
 
 - name: generate new secret
@@ -129,6 +138,7 @@
     chdir: "{{ redmine_path }}/current"
   register: redmine_prod_secret
   become_user: "{{ redmine_system_user }}"
+  become: yes
   tags:
     - config
 
@@ -159,6 +169,7 @@
     - gem update --system --no-ri --no-rdoc
     - passenger-install-apache2-module -a --languages ruby
   become_user: "{{ redmine_system_user }}"
+  become: yes
   tags: debug
   # ignore_errors: true
   register: result
@@ -174,7 +185,7 @@
 
 - name: Ensure perl_modules_Apache2 exists
   file:
-    path: perl_modules_html
+    path: "{{ perl_modules_html }}"
     state: directory
     owner: root
     group: root
@@ -182,13 +193,19 @@
 
 #  Perl for Apache
 - name: link Redmine.pm
-  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest={{ perl_modules_html }}/Redmine.pm
+  file: 
+    state: link 
+    src: "{{ redmine_dir }}/extra/svn/Redmine.pm"
+    dest: "{{ perl_modules_html }}/Redmine.pm"
   notify: reload apache
   tags:
     - config
 
 - name: link apache2 Redmine.pm
-  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache2/Redmine.pm
+  file: 
+    state: link 
+    src: "{{ redmine_dir }}/extra/svn/Redmine.pm" 
+    dest: /usr/lib/perl5/Apache2/Redmine.pm
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
   notify: reload apache
   tags:
@@ -201,7 +218,7 @@
     - config
 
 - name: enable redmine apache lxc config
-  file: state=link src=../sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
+  file: state=link src=/etc/apache2/sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
   notify: reload apache
   tags:
     - config
