@@ -21,7 +21,7 @@ galaxy_info:
   - web
 allow_duplicates: no
 dependencies:
-  - role: ruby-rvm
+  - role: coffeeitworks.ansible_role_ruby_rvm
   - role: geerlingguy.mysql
 
 # Install from: https://github.com/CoffeeITWorks/ansible-role-ruby-rvm.git

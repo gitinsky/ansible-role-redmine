@@ -24,7 +24,7 @@ Example file:
 
 ```yaml
 - src: https://github.com/CoffeeITWorks/ansible-role-ruby-rvm.git
-  name: ruby-rvm
+  name: coffeeitworks.ansible_role_ruby_rvm
 ```
 
 ## Vars

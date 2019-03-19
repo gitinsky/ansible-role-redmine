@@ -7,7 +7,7 @@
 ## It is required for ansible-role-redmine
 
 - src: https://github.com/CoffeeITWorks/ansible-role-ruby-rvm.git
-  name: ruby-rvm
+  name: coffeeitworks.ansible_role_ruby_rvm
 
 - src: geerlingguy.mysql
   name: geerlingguy.mysql
