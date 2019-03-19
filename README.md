@@ -2,17 +2,13 @@
 
 [![Build Status](https://travis-ci.org/CoffeeITWorks/ansible-role-redmine.svg?branch=master)](https://travis-ci.org/CoffeeITWorks/ansible-role-redmine)
 
-This role performs basic redmine 3.3.0 installation with apache and passenger. You have to add https support on your own, feel free to install redmine to lxc container managed by [this role](https://github.com/gitinsky/ansible-role-lxc)
+This role performs basic redmine 3.3 /3.4 / 4.x installation with apache and passenger. You have to add https support on your own, feel free to install redmine to lxc container managed by [this role](https://github.com/gitinsky/ansible-role-lxc)
 
 Get with ```git clone https://github.com/gitinsky/ansible-role-redmine.git roles/redmine```.
 
-Tested on ubuntu 14.04.
+Tested on ubuntu 16.04.
 
-Ubuntu 12.04 support is currently broken due to sudoers issues.
-
-Applied with ansible 1.8.4.
-
-Repository support is not implemented yet.
+Applied with ansible 2.6+
 
 Role removes default apache config file.
 
@@ -33,7 +29,7 @@ Check them out on [defaults/main.yml](defaults/main.yml)
 
 You can change the redmine version with:
 
-    redmine_svn_version: 3.3
+    redmine_svn_version: 3.4
 
 ## Oficial documentation
 
