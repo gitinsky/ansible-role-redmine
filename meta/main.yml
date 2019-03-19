@@ -1,5 +1,27 @@
 ---
+galaxy_info:
+  author: Git in Sky
+  description: Install redmine on Debian or Ubuntu
+  license: GPLv2
+  min_ansible_version: 2.6
+  # https://galaxy.ansible.com/api/v1/platforms/
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+    - xenial
+    - bionic
+  - name: Debian
+    versions:
+    - all
+  galaxy_tags:
+  - redmine
+  - development
+  - projects
+  - web
+allow_duplicates: no
 dependencies:
-  - { role: ruby-rvm }
+  - role: ruby-rvm
+  - role: geerlingguy.mysql
 
-# Install from: https://github.com/gitinsky/ansible-role-ruby-rvm
+# Install from: https://github.com/CoffeeITWorks/ansible-role-ruby-rvm.git

@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    ruby_version: '2.3.6'
+  roles:
+    - role: ansible-role-redmine
