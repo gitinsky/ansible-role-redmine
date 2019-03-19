@@ -1,5 +1,7 @@
 ---
 redmine_path: /opt/redmine
+redmine_dir: "{{ redmine_path }}/current"
+redmine_plugins_dir: "{{ redmine_dir }}/plugins"
 redmine_db_password: "{{ ansible_default_ipv4.macaddress | md5 | truncate(10,True,'') }}"
 redmine_system_user: redmine
 apache_no_default: yes
