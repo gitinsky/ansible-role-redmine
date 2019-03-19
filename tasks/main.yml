@@ -38,8 +38,8 @@
   file: 
     dest: "{{ redmine_path }}"
     owner: "{{ redmine_system_user }}"
-    group: "{{ redmine_system_user }}"
-    mode: u+rwx,g+rwx,o+rx
+    group: "www-data"
+    mode: u+rwx,g+rwxs,o+rx
     state: directory
 
 - name: check out redmine
