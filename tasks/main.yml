@@ -36,9 +36,9 @@
 # Redmine 
 - name: create redmine dir
   file: 
-    dest: {{ redmine_path }}
-    owner: {{ redmine_system_user }}
-    group: {{ redmine_system_user }}
+    dest: "{{ redmine_path }}"
+    owner: "{{ redmine_system_user }}"
+    group: "{{ redmine_system_user }}"
     mode: u+rwx,g+rwx,o+rx
     state: directory
 
