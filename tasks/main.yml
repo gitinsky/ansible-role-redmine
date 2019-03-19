@@ -12,12 +12,12 @@
 
 # Now mysql-server package is installed by dependencies
 - name: install deps
-  apt: 
+  apt:
     name: ['curl', 'git', 'git-core', 'subversion', 'imagemagick', 'libmagickwand-dev',
            'libmysqlclient-dev', 'apache2', 'apache2-dev', 'libcurl4-gnutls-dev',
            'libapache2-svn', 'libapache-dbi-perl', 'libapache2-mod-perl2', 'libdbd-mysql-perl',
            'libauthen-simple-ldap-perl', 'openssl', 'python-mysqldb', 'tzdata']
-    state: latest
+    state: present
   tags:
       - install
 
@@ -106,6 +106,7 @@
     - gem install {{ redmine_bundler_gem }}
     - gem install rake
   become: yes
+  changes_when: false
 
 - name: run bundler
   shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
@@ -119,6 +120,7 @@
     - RAILS_ENV=production bundle exec rake db:migrate
     - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
   become_user: "{{ redmine_system_user }}"
+  changed_when: false
 
 - name: generate new secret
   shell: "bash -c 'source {{ rvm_path }} && rake secret'"
