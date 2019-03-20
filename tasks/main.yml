@@ -46,6 +46,7 @@
   subversion: 
     repo: "https://svn.redmine.org/redmine/branches/{{ redmine_svn_version }}-stable"
     dest: "{{ redmine_path }}/current"
+    update: yes
   become_user: "{{ redmine_system_user }}"
   become: yes
 
@@ -160,16 +161,16 @@
     - dav_fs
     - rewrite
 
+# https://www.phusionpassenger.com/library/install/apache/install/oss/rubygems_rvm/
+# https://guides.rubygems.org/command-reference/#gem-install
 - name: install passenger
   shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
-    - gem install passenger
-    - gem update --system --no-ri --no-rdoc
+    - gem install passenger 
+    - gem update --system --no-document
     - passenger-install-apache2-module -a --languages ruby
-  become_user: "{{ redmine_system_user }}"
-  become: yes
   tags: debug
   # ignore_errors: true
   register: result

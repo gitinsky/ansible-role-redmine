@@ -30,6 +30,16 @@ Check them out on [defaults/main.yml](defaults/main.yml)
 You can change the redmine version with:
 
     redmine_svn_version: 3.4
+    # This variable is used by role ruby-rvm and requires to be compatible with current redmine version
+    ruby_version: '2.4.5'
+    # To avoid errors like this we need to specify the bundler version:
+    # rails (= 4.2.11) was resolved to 4.2.11, which depends on\n
+    # bundler (< 2.0, >= 1.3.0)\n\n  Current Bundler version:\n
+    # bundler (2.0.1)\nThis Gemfile requires a different version of Bundler
+    # https://github.com/bundler/bundler/blob/1-17-stable/CHANGELOG.md
+    # https://bundler.io/guides/bundler_2_upgrade.html#what-happens-if-my-application-needs-bundler-1-but-i-only-have-bundler-2-installed
+    redmine_bundle_version: 1.17.3
+    redmine_bundler_gem: 'bundler -v "{{ redmine_bundle_version }}"'
 
 ## Oficial documentation
 
@@ -69,3 +79,23 @@ http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
 ## Other external links
 
 https://www.vultr.com/docs/how-to-install-redmine-on-ubuntu-16-04
+
+## Notes about upgrading from previous redmine versions
+
+The best option is to install a new machine with this role and move the database and data files to it, then run this role again to ensure all steps are updated for every plugin and gemfiles requirements.
+
+But also in-place upgrade could be performed, but with a little of hand performed tasks.
+
+For example I had to run as root:
+
+```shell
+ gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+ rm -rf /usr/local/rvm/
+ rm /etc/apache2/sites-enabled/redmine.conf
+ rm -rf /home/redmine/.rvm/
+ rm /etc/apache2/conf-enabled/passenger.conf
+ ```
+
+ To ensure everything was clean before upgrading.
+
+See also open issues at: https://github.com/CoffeeITWorks/ansible-role-redmine/issues
