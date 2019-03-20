@@ -30,6 +30,16 @@ Check them out on [defaults/main.yml](defaults/main.yml)
 You can change the redmine version with:
 
     redmine_svn_version: 3.4
+    # This variable is used by role ruby-rvm and requires to be compatible with current redmine version
+    ruby_version: '2.4.5'
+    # To avoid errors like this we need to specify the bundler version:
+    # rails (= 4.2.11) was resolved to 4.2.11, which depends on\n
+    # bundler (< 2.0, >= 1.3.0)\n\n  Current Bundler version:\n
+    # bundler (2.0.1)\nThis Gemfile requires a different version of Bundler
+    # https://github.com/bundler/bundler/blob/1-17-stable/CHANGELOG.md
+    # https://bundler.io/guides/bundler_2_upgrade.html#what-happens-if-my-application-needs-bundler-1-but-i-only-have-bundler-2-installed
+    redmine_bundle_version: 1.17.3
+    redmine_bundler_gem: 'bundler -v "{{ redmine_bundle_version }}"'
 
 ## Oficial documentation
 
