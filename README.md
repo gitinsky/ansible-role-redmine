@@ -69,3 +69,23 @@ http://www.redmine.org/projects/redmine/wiki/HowToInstallRedmineOnUbuntuServer
 ## Other external links
 
 https://www.vultr.com/docs/how-to-install-redmine-on-ubuntu-16-04
+
+## Notes about upgrading from previous redmine versions
+
+The best option is to install a new machine with this role and move the database and data files to it, then run this role again to ensure all steps are updated for every plugin and gemfiles requirements.
+
+But also in-place upgrade could be performed, but with a little of hand performed tasks.
+
+For example I had to run as root:
+
+```shell
+ gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+ rm -rf /usr/local/rvm/
+ rm /etc/apache2/sites-enabled/redmine.conf
+ rm -rf /home/redmine/.rvm/
+ rm /etc/apache2/conf-enabled/passenger.conf
+ ```
+
+ To ensure everything was clean before upgrading.
+
+See also open issues at: https://github.com/CoffeeITWorks/ansible-role-redmine/issues
