@@ -3,6 +3,10 @@
 # Multi-OS vars
 - include: multi_os.yml
 
+- name: Add git ppa repo for xenial to fix issues using proxy fix #6
+  apt_repository: repo='ppa:git-core/ppa'
+  when: ansible_distribution_release == 'xenial'
+
 # Dependencies
 - name: apt-get update
   apt: update_cache=yes
