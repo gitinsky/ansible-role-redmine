@@ -5,7 +5,7 @@
 
 - name: Add git ppa repo for xenial to fix issues using proxy fix #6
   apt_repository: repo='ppa:git-core/ppa'
-  when: ansible_distribution_release == 'xenial'
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
 
 # Dependencies
 - name: apt-get update
