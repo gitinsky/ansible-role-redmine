@@ -3,10 +3,6 @@
 # Multi-OS vars
 - include: multi_os.yml
 
-- name: Add git ppa repo for xenial to fix issues using proxy fix #6
-  apt_repository: repo='ppa:git-core/ppa'
-  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
-
 # Dependencies
 - name: apt-get update
   apt: update_cache=yes
@@ -17,10 +13,29 @@
 # Now mysql-server package is installed by dependencies
 - name: install deps
   apt:
-    name: ['curl', 'git', 'git-core', 'subversion', 'imagemagick', 'libmagickwand-dev',
+    name: ['curl',  'subversion', 'imagemagick', 'libmagickwand-dev',
            'libmysqlclient-dev', 'apache2', 'apache2-dev', 'libcurl4-gnutls-dev',
            'libapache2-svn', 'libapache-dbi-perl', 'libapache2-mod-perl2', 'libdbd-mysql-perl',
-           'libauthen-simple-ldap-perl', 'openssl', 'python-mysqldb', 'tzdata']
+           'libauthen-simple-ldap-perl', 'openssl', 'python-mysqldb', 'tzdata', 'software-properties-common']
+    state: present
+  tags:
+      - install
+
+- name: Add git ppa repo for xenial to fix issues using proxy fix git issues in xenial #6
+  apt_repository: repo='ppa:git-core/ppa'
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
+
+# Dependencies git
+- name: apt-get update
+  apt: update_cache=yes
+  ignore_errors: True
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
+  tags:
+      - install
+
+- name: install git
+  apt:
+    name: [git', 'git-core']
     state: present
   tags:
       - install
@@ -254,3 +269,4 @@
   tags:
     - config
 ### End apache
+
