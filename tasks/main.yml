@@ -35,7 +35,7 @@
 
 - name: install git
   apt:
-    name: [git', 'git-core']
+    name: ['git', 'git-core']
     state: present
   tags:
       - install
