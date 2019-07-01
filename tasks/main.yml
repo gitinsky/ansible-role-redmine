@@ -1,32 +1,42 @@
 ---
+
+# Multi-OS vars
+- include: multi_os.yml
+
+# Dependencies
 - name: apt-get update
   apt: update_cache=yes
   ignore_errors: True
   tags:
       - install
 
+# Now mysql-server package is installed by dependencies
 - name: install deps
-  apt: name={{ item }} state=latest
-  with_items:
-      - curl
-      - git
-      - git-core
-      - subversion
-      - imagemagick
-      - libmagickwand-dev
-      - mysql-server
-      - libmysqlclient-dev
-      - apache2
-      - apache2-dev
-      - libcurl4-gnutls-dev
-      - apache2
-      - libapache2-svn
-      - libapache-dbi-perl
-      - libapache2-mod-perl2
-      - libdbd-mysql-perl
-      - libauthen-simple-ldap-perl
-      - openssl
-      - python-mysqldb
+  apt:
+    name: ['curl',  'subversion', 'imagemagick', 'libmagickwand-dev',
+           'libmysqlclient-dev', 'apache2', 'apache2-dev', 'libcurl4-gnutls-dev',
+           'libapache2-svn', 'libapache-dbi-perl', 'libapache2-mod-perl2', 'libdbd-mysql-perl',
+           'libauthen-simple-ldap-perl', 'openssl', 'python-mysqldb', 'tzdata', 'software-properties-common']
+    state: present
+  tags:
+      - install
+
+- name: Add git ppa repo for xenial to fix issues using proxy fix git issues in xenial #6
+  apt_repository: repo='ppa:git-core/ppa'
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
+
+# Dependencies git
+- name: apt-get update
+  apt: update_cache=yes
+  ignore_errors: True
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
+  tags:
+      - install
+
+- name: install git
+  apt:
+    name: ['git', 'git-core']
+    state: present
   tags:
       - install
 
@@ -35,53 +45,36 @@
   user: name={{ redmine_system_user }}
         comment="redmine_system_user"
         groups=www-data,rvm
+        append=yes
+        group=www-data
         shell=/bin/bash
 
 - name: allow redmine user to run apt-get update
   template: dest=/etc/sudoers.d/redmine src=sudoers.d/redmine.yml
 
-- name: check if GPG key is present
-  command: bash -c "gpg -k | grep D39DC0E3"
-  ignore_errors: true
-  register: result
-  become_user: "{{ redmine_system_user }}"
-
-- name: Import GPG keys
-  command: 'gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3'
-  changed_when: False
-  when: result|failed
-  become_user: "{{ redmine_system_user }}"
-
-- name: install RVM
-  command: bash -c "curl -L https://get.rvm.io | bash -s stable"
-  args:
-    creates: /home/redmine/.rvm/bin/rvm
-  become_user: "{{ redmine_system_user }}"
-
-- name: install ruby
-  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm install ruby"
-  become_user: "{{ redmine_system_user }}"
-
-- name: set a default Ruby
-  command: bash -c "source /home/$USER/.rvm/scripts/rvm && rvm use ruby --default"
-  become_user: "{{ redmine_system_user }}"
-
+# Redmine 
 - name: create redmine dir
-  file: dest={{ redmine_path }}
-        owner={{ redmine_system_user }}
-        group={{ redmine_system_user }}
-        state=directory
+  file: 
+    dest: "{{ redmine_path }}"
+    owner: "{{ redmine_system_user }}"
+    group: "www-data"
+    mode: u+rwx,g+rwxs,o+rx
+    state: directory
 
 - name: check out redmine
-  subversion: repo=https://svn.redmine.org/redmine/branches/{{ redmine_svn_version }}-stable dest={{ redmine_path }}/current
+  subversion: 
+    repo: "https://svn.redmine.org/redmine/branches/{{ redmine_svn_version }}-stable"
+    dest: "{{ redmine_path }}/current"
+    update: yes
   become_user: "{{ redmine_system_user }}"
+  become: yes
 
 - name: set permissions on redmine dirs
   file: dest={{ item }}
         owner=www-data
         group=www-data
         state=directory
-        mode=775
+        mode=u+rwxs,g+rwxs,o+rx
         recurse=yes
   with_items:
     - "{{ redmine_path }}/current/files"
@@ -90,27 +83,14 @@
     - "{{ redmine_path }}/current/public/plugin_assets"
     - "{{ redmine_path }}/repos/svn"
     - "{{ redmine_path }}/repos/git"
-
-# - name: set permissions on redmine files
-#   file: dest={{ item }}
-#         owner=www-data
-#         group=www-data
-#         state=file
-#         mode=644
-#   with_items:
-#     - "{{ redmine_path }}/current/files"
-#     - "{{ redmine_path }}/current/log"
-#     - "{{ redmine_path }}/current/tmp"
-#     - "{{ redmine_path }}/current/public/plugin_assets"
-#     - "{{ redmine_path }}/repos/svn"
-#     - "{{ redmine_path }}/repos/git"
+    - "{{ redmine_plugins_dir }}"
 
 - name: set permissions on rdmine dirs
   file: dest={{ item }}
         owner=www-data
         group=www-data
         state=directory
-        mode=775
+        mode=u+rwxs,g+rwxs,o+rx
         recurse=yes
   with_items:
     - "{{ redmine_path }}/current/log"
@@ -143,28 +123,42 @@
   notify: reload apache
   tags: config
 
-- name: install and run bundler
-  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
+# https://makandracards.com/makandra/9741-run-specific-version-of-bundler
+# https://github.com/bundler/bundler/blob/master/doc/TROUBLESHOOTING.md
+- name: Install bundler
+  shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
+  #args:
+  #  chdir: "{{ redmine_path }}/current"
+  with_items:
+    #- gem install --user-install rubygems-bundler
+    - gem install {{ redmine_bundler_gem }}
+    - gem install rake
+    - gem install tzinfo-data
+  become: yes
+  changed_when: false
+
+- name: run bundler
+  shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
-    - gem install bundler
-    - gem install rake
-    - gem install bundler --pre
     #- bundle update nokogiri
-    - bundle update
-    - bundle install --without development test
+    - bundle _{{ redmine_bundle_version }}_ update  # _1.17.3_ specifying version is temporal workaround for redmine < 4
+    - bundle _{{ redmine_bundle_version }}_ install --without development test # _1.17.3_ specifying version is temporal workaround for redmine < 4
     - RAILS_ENV=production bundle exec rake db:migrate
     - RAILS_ENV=production REDMINE_LANG=en bundle exec rake redmine:load_default_data
   become_user: "{{ redmine_system_user }}"
+  become: yes
+  changed_when: false
 
 - name: generate new secret
-  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && rake secret'"
+  shell: "bash -c 'source {{ rvm_path }} && rake secret'"
   args:
     creates: "{{ redmine_path }}/current/config/secrets.yml"
     chdir: "{{ redmine_path }}/current"
   register: redmine_prod_secret
   become_user: "{{ redmine_system_user }}"
+  become: yes
   tags:
     - config
 
@@ -174,7 +168,9 @@
   when: redmine_prod_secret.changed
   tags:
     - config
+### End redmine
 
+# Apache
 - name: enable apache modules
   apache2_module: state=present name={{ item }}
   with_items:
@@ -184,15 +180,16 @@
     - dav_fs
     - rewrite
 
+# https://www.phusionpassenger.com/library/install/apache/install/oss/rubygems_rvm/
+# https://guides.rubygems.org/command-reference/#gem-install
 - name: install passenger
-  shell: "bash -c 'source /home/$USER/.rvm/scripts/rvm && {{ item }}'"
+  shell: "bash -c 'source {{ rvm_path }} && {{ item }}'"
   args:
     chdir: "{{ redmine_path }}/current"
   with_items:
-    - gem install passenger
-    - gem update --system --no-ri --no-rdoc
+    - gem install passenger 
+    - gem update --system --no-document
     - passenger-install-apache2-module -a --languages ruby
-  become_user: "{{ redmine_system_user }}"
   tags: debug
   # ignore_errors: true
   register: result
@@ -201,19 +198,35 @@
   tags: debug
 
 - include: passenger.12.04.yml
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+  when: not passenger_1604_plus
 
-- include: passenger.14.04.yml
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+- include: passenger.16.04.yml
+  when: passenger_1604_plus
 
+- name: Ensure perl_modules_Apache2 exists
+  file:
+    path: "{{ perl_modules_html }}"
+    state: directory
+    owner: root
+    group: root
+    mode: u+rwx,g+rx,o+rx
+
+#  Perl for Apache
 - name: link Redmine.pm
-  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache/Redmine.pm
+  file: 
+    state: link 
+    src: "{{ redmine_dir }}/extra/svn/Redmine.pm"
+    dest: "{{ perl_modules_html }}/Redmine.pm"
   notify: reload apache
   tags:
     - config
 
 - name: link apache2 Redmine.pm
-  file: state=link src=/opt/redmine/current/extra/svn/Redmine.pm dest=/usr/lib/perl5/Apache2/Redmine.pm
+  file: 
+    state: link 
+    src: "{{ redmine_dir }}/extra/svn/Redmine.pm" 
+    dest: /usr/lib/perl5/Apache2/Redmine.pm
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
   notify: reload apache
   tags:
     - config
@@ -225,7 +238,7 @@
     - config
 
 - name: enable redmine apache lxc config
-  file: state=link src=../sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
+  file: state=link src=/etc/apache2/sites-available/redmine.conf dest=/etc/apache2/sites-enabled/redmine.conf
   notify: reload apache
   tags:
     - config
@@ -246,11 +259,14 @@
 - name: enable apache redmine module
   apache2_module: state=present name=redmine
   ignore_errors: yes
+  notify: reload apache
 
 - name: Delete default apache conf
   file: dest=/etc/apache2/sites-enabled/000-default.conf
         state=absent
-  notify: apache reload
+  notify: reload apache
   when: apache_no_default
   tags:
     - config
+### End apache
+

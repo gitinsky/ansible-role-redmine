@@ -1,10 +1,11 @@
 ---
+
 - name: generate passenger.conf
-  shell: "su redmine -c 'source /home/{{ redmine_system_user }}/.rvm/scripts/rvm && passenger-install-apache2-module --snippet' > /etc/apache2/conf-available/passenger.conf"
+  shell: "su redmine -c 'source {{ rvm_path }} && passenger-install-apache2-module --snippet' > /etc/apache2/conf-available/passenger.conf"
   args:
     chdir: "{{ redmine_path }}/current"
   notify: reload apache
-  tags: config
+  tags: debug
 
 - name: link passenger.conf
   file: state=link src=../conf-available/passenger.conf dest=/etc/apache2/conf-enabled/passenger.conf
